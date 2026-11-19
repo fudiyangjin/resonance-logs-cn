@@ -1766,6 +1766,10 @@ export type VoiceEvent =
  */
 { kind: "started" } |
 /**
+ * A nearby monster cast, with optional delayed playback and countdown.
+ */
+{ kind: "monsterSkillCast"; delayMs: number; countdownWindowMs: number } |
+/**
  * Buff lost (all layers).
  */
 { kind: "ended" } |

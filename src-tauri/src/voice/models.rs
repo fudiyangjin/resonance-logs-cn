@@ -377,6 +377,13 @@ pub enum VoiceSubject {
 pub enum VoiceEvent {
     /// Buff gained / mechanic fired / alert raised.
     Started,
+    /// A nearby monster cast, with optional delayed playback and countdown.
+    MonsterSkillCast {
+        #[serde(rename = "delayMs")]
+        delay_ms: u32,
+        #[serde(rename = "countdownWindowMs")]
+        countdown_window_ms: u32,
+    },
     /// Buff lost (all layers).
     Ended,
     /// The subject's timer will run out in `seconds_before` seconds.
@@ -415,7 +422,11 @@ impl VoiceTrigger {
                 S::BossDbm { .. } | S::RosterSkill { .. },
                 E::Started | E::ExpiringIn { .. }
             ) | (S::Counter { .. }, E::Threshold | E::ExpiringIn { .. })
-                | (S::MonsterSkill { .. } | S::Alert { .. }, E::Started)
+                | (
+                    S::MonsterSkill { .. },
+                    E::Started | E::MonsterSkillCast { .. }
+                )
+                | (S::Alert { .. }, E::Started)
         );
         if ok {
             Ok(())
@@ -454,7 +465,7 @@ pub struct VoiceRule {
     /// `seconds_before`.
     #[serde(default)]
     pub lead_advance_ms: u32,
-    /// `ExpiringIn` only: count the last seconds down from this number
+    /// Count the last seconds down from this number
     /// (one digit per second, on the second). 0 does not count.
     #[serde(default)]
     pub countdown_from: u8,
@@ -475,6 +486,7 @@ pub struct CountdownId(pub u64);
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct CountdownTick {
     pub countdown: CountdownId,
+    pub requires_phrase: bool,
     /// The digit: seconds left when it is spoken.
     pub n: u8,
     pub priority: u8,
@@ -492,6 +504,9 @@ pub struct VoiceCueIntent {
     pub phrase_id: String,
     pub priority: u8,
     pub triggered_at_ms: i64,
+    #[serde(skip)]
+    #[specta(skip)]
+    pub countdown: Option<CountdownId>,
     /// How long the cue stays worth playing: a lead cue ("N seconds left")
     /// is stale once the moment it warns about has come. `None` never
     /// expires (edges, and zero-lead cues that *are* that moment).
@@ -675,6 +690,20 @@ impl VoiceRuntimeSnapshot {
         });
         for rule in &mut self.rules {
             rule.cooldown_ms = rule.cooldown_ms.min(MAX_VOICE_RULE_COOLDOWN_MS);
+            if let VoiceEvent::MonsterSkillCast {
+                delay_ms,
+                countdown_window_ms,
+            } = &mut rule.trigger.event
+            {
+                *delay_ms = (*delay_ms).min(60_000);
+                *countdown_window_ms = (*countdown_window_ms).min(60_000);
+                rule.lead_advance_ms = 0;
+                rule.countdown_from = rule
+                    .countdown_from
+                    .min(MAX_COUNTDOWN_FROM)
+                    .min((*countdown_window_ms / 1_000) as u8);
+                continue;
+            }
             // Lead timing only means something ahead of an expiry, and a
             // countdown cannot start above the lead it counts through.
             match rule.trigger.seconds_before() {

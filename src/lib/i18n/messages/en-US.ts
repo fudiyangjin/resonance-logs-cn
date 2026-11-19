@@ -2355,6 +2355,9 @@ export const enUSMessages = {
   "monsterMonitor.monsterSkill.countdownHint":
     "Shows the remaining seconds and a progress bar; the row disappears when the countdown ends. Useful when this skill is followed by another one a fixed number of seconds later.",
   "monsterMonitor.monsterSkill.voice.title": "Voice Broadcast",
+  "monsterMonitor.monsterSkill.voice.delay": "Start playback after {seconds} seconds",
+  "monsterMonitor.monsterSkill.voice.countdown": "Use countdown voice",
+  "monsterMonitor.monsterSkill.voice.countdownHint": "After the selected phrase, use the Countdown Digits to count down the remaining skill display time, starting at up to 10",
   "monsterMonitor.monsterSkill.styleTitle": "Panel Style",
   "monsterMonitor.entityDuration.title": "Entity Duration",
   "monsterMonitor.entityDuration.description":

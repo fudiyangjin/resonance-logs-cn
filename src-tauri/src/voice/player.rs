@@ -8,6 +8,7 @@
 //! live event loop can `enqueue` cues without ever waiting on audio I/O.
 
 use parking_lot::Mutex;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
@@ -49,6 +50,7 @@ pub struct QueuedCue {
     pub rule_id: String,
     pub priority: u8,
     pub wav_path: Option<PathBuf>,
+    pub countdown: Option<CountdownId>,
     /// When the cue stops being worth playing (a lead cue whose moment has
     /// come); a cue still waiting in the queue by then is dropped. `None`
     /// never expires.
@@ -66,6 +68,7 @@ impl QueuedCue {
 #[derive(Debug, Clone)]
 pub struct QueuedTick {
     pub countdown: CountdownId,
+    pub requires_phrase: bool,
     pub priority: u8,
     /// `None` plays the built-in tone, like a cue without audio.
     pub wav_path: Option<PathBuf>,
@@ -83,6 +86,7 @@ impl QueuedTick {
 /// it, digits of another countdown are not counted unless they outrank it.
 /// Two interleaved countdowns ("3, 3, 2, 2") would be noise.
 const COUNTDOWN_HOLD: Duration = Duration::from_millis(1_500);
+const COMPLETED_PHRASE_HOLD: Duration = Duration::from_secs(60);
 
 /// The countdown that last spoke on the countdown track.
 #[derive(Debug, Clone, Copy)]
@@ -362,6 +366,8 @@ struct WorkerState<O: CueOutput> {
     volume: f32,
     policy: VoiceQueuePolicy,
     playing_priority: Option<u8>,
+    playing_countdown_phrase: Option<CountdownId>,
+    completed_countdown_phrases: HashMap<CountdownId, Instant>,
     /// Who holds the countdown track.
     countdown: Option<ActiveCountdown>,
     stop_epoch: u64,
@@ -376,6 +382,8 @@ impl<O: CueOutput> WorkerState<O> {
             volume: 1.0,
             policy: VoiceQueuePolicy::default(),
             playing_priority: None,
+            playing_countdown_phrase: None,
+            completed_countdown_phrases: HashMap::new(),
             countdown: None,
             stop_epoch: 0,
         }
@@ -393,6 +401,14 @@ impl<O: CueOutput> WorkerState<O> {
     /// is still counting, unless they outrank it.
     fn handle_tick(&mut self, tick: QueuedTick, now: Instant) {
         if !self.enabled || tick.is_stale(now) {
+            return;
+        }
+        self.record_completed_phrase(now);
+        if tick.requires_phrase
+            && !self
+                .completed_countdown_phrases
+                .contains_key(&tick.countdown)
+        {
             return;
         }
         let held_by_another = self.countdown.is_some_and(|current| {
@@ -462,6 +478,7 @@ impl<O: CueOutput> WorkerState<O> {
     fn play_now(&mut self, cue: QueuedCue) {
         self.output.start(&cue, self.volume);
         self.playing_priority = Some(cue.priority);
+        self.playing_countdown_phrase = cue.countdown;
     }
 
     /// Highest priority first; ties resolve to the oldest arrival. Cues that
@@ -483,9 +500,21 @@ impl<O: CueOutput> WorkerState<O> {
         if self.is_playing() {
             return;
         }
+        self.record_completed_phrase(Instant::now());
         match self.pop_next() {
             Some(cue) => self.play_now(cue),
             None => self.playing_priority = None,
+        }
+    }
+
+    fn record_completed_phrase(&mut self, now: Instant) {
+        self.completed_countdown_phrases.retain(|_, completed| {
+            now.saturating_duration_since(*completed) < COMPLETED_PHRASE_HOLD
+        });
+        if !self.is_playing()
+            && let Some(countdown) = self.playing_countdown_phrase.take()
+        {
+            self.completed_countdown_phrases.insert(countdown, now);
         }
     }
 
@@ -494,6 +523,8 @@ impl<O: CueOutput> WorkerState<O> {
         self.output.stop_ticks();
         self.queue.clear();
         self.playing_priority = None;
+        self.playing_countdown_phrase = None;
+        self.completed_countdown_phrases.clear();
         self.countdown = None;
     }
 }
@@ -621,6 +652,7 @@ mod tests {
     fn tick(countdown: u64, priority: u8) -> QueuedTick {
         QueuedTick {
             countdown: CountdownId(countdown),
+            requires_phrase: false,
             priority,
             wav_path: None,
             stale_at: None,
@@ -639,6 +671,7 @@ mod tests {
             rule_id: rule_id.to_string(),
             priority,
             wav_path: None,
+            countdown: None,
             stale_at: None,
         }
     }
@@ -677,12 +710,14 @@ mod tests {
             rule_id: "first".to_string(),
             priority: 1,
             wav_path: Some(PathBuf::from("first.wav")),
+            countdown: None,
             stale_at: None,
         };
         let second = QueuedCue {
             rule_id: "second".to_string(),
             priority: 2,
             wav_path: Some(PathBuf::from("second.wav")),
+            countdown: None,
             stale_at: None,
         };
 
@@ -877,6 +912,30 @@ mod tests {
         state.stop_all();
         assert_eq!(state.output.tick_stops, 1);
         assert!(state.countdown.is_none());
+    }
+
+    #[test]
+    fn cast_countdown_waits_for_its_queued_phrase_to_finish() {
+        let mut state = WorkerState::new(FakeOutput::default());
+        state.enabled = true;
+        let now = Instant::now();
+        state.handle_enqueue(cue("other", 1));
+        state.handle_enqueue(QueuedCue {
+            countdown: Some(CountdownId(1)),
+            ..cue("cast", 1)
+        });
+        let digit = QueuedTick {
+            requires_phrase: true,
+            ..tick(1, 1)
+        };
+        state.handle_tick(digit.clone(), now);
+        finish_current(&mut state);
+        state.handle_tick(digit.clone(), now);
+        assert!(state.output.ticks.is_empty());
+
+        finish_current(&mut state);
+        state.handle_tick(digit, now);
+        assert_eq!(state.output.ticks, [1]);
     }
 
     #[test]

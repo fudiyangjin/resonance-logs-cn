@@ -72,17 +72,23 @@ impl LeadSpec {
             lead_ms: self.lead_ms,
             late_ms: self.late_ms,
         });
-        out.extend((1..=self.ticks).map(|n| Lead {
-            timer: VoiceTimer::Tick {
-                rule: self.handle,
-                subject,
-                n,
-            },
-            expires,
-            lead_ms: u64::from(n) * 1_000,
-            late_ms: Some(TICK_LATE_MS),
-        }));
+        push_ticks(self.handle, subject, expires, self.ticks, out);
     }
+}
+
+pub(super) fn push_ticks(
+    rule: VoiceRuleHandle,
+    subject: VoiceLeadSubject,
+    expires: MonoTimeMs,
+    ticks: u8,
+    out: &mut Vec<Lead>,
+) {
+    out.extend((1..=ticks).map(|n| Lead {
+        timer: VoiceTimer::Tick { rule, subject, n },
+        expires,
+        lead_ms: u64::from(n) * 1_000,
+        late_ms: Some(TICK_LATE_MS),
+    }));
 }
 
 /// Lookup key derived from a [`VoiceSubject`] with scope details stripped:

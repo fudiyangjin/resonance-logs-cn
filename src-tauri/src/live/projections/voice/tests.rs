@@ -2519,6 +2519,42 @@ mod entity_monitor_bridge {
     }
 
     #[test]
+    fn delayed_monster_skill_countdown_uses_the_refreshed_cast_deadline() {
+        let mut rule = monster_skill_rule();
+        rule.trigger.event = VoiceEvent::MonsterSkillCast {
+            delay_ms: 1_500,
+            countdown_window_ms: 3_500,
+        };
+        rule.countdown_from = 3;
+        let mut h = Harness::new(vec![rule], vec![]);
+        let boss = EntityUuid(30);
+        let mut observations = monster(boss, None);
+        observations.push(cast(boss, MONSTER_SKILL, SkillPhase::Observed));
+        h.step(10, observations);
+        assert!(h.fired().is_empty());
+
+        h.step(20, vec![cast(boss, MONSTER_SKILL, SkillPhase::Observed)]);
+        h.drain(25);
+        assert!(h.fired().is_empty());
+        h.drain(35);
+        let cues = h.voice.take_cues();
+        assert_eq!(cues.len(), 1);
+        assert_eq!(cues[0].phrase_id, "cast");
+        assert!(h.ticks().is_empty());
+
+        h.drain(40);
+        let ticks = h.voice.take_ticks();
+        assert_eq!(ticks.len(), 1);
+        assert_eq!(ticks[0].n, 3);
+        assert!(ticks[0].requires_phrase);
+        assert_eq!(Some(ticks[0].countdown), cues[0].countdown);
+        h.drain(50);
+        assert_eq!(h.ticks(), [2]);
+        h.drain(60);
+        assert_eq!(h.ticks(), [1]);
+    }
+
+    #[test]
     fn monster_skill_cast_by_character_or_player_summon_is_silent() {
         let mut h = Harness::new(vec![monster_skill_rule()], vec![]);
         let summon = EntityUuid(31);

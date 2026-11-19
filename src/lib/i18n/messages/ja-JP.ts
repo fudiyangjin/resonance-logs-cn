@@ -2322,6 +2322,9 @@ export const jaJPMessages = {
   "monsterMonitor.monsterSkill.countdownHint":
     "残り秒数とプログレスバーを表示し、カウントダウンが終わると消えます。このスキルの数秒後に次のスキルが来る場合に便利です。",
   "monsterMonitor.monsterSkill.voice.title": "音声読み上げ",
+  "monsterMonitor.monsterSkill.voice.delay": "{seconds} 秒後に読み上げを開始",
+  "monsterMonitor.monsterSkill.voice.countdown": "カウントダウン音声を使う",
+  "monsterMonitor.monsterSkill.voice.countdownHint": "設定した音声の後に、スキル表示の残り時間をカウントダウン数字で最大 10 から秒ごとに読み上げます",
   "monsterMonitor.monsterSkill.styleTitle": "パネルスタイル",
   "monsterMonitor.entityDuration.title": "エンティティ持続時間",
   "monsterMonitor.entityDuration.description":
